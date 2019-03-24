@@ -40,7 +40,7 @@ namespace Uface
 
     class PInvoke
     {
-        const string dll_path = "F:/maxiaofang/repos/uface_stable_master/uface2/build_x86/app/quality_judge/c/RelWithDebInfo/uface_quality_judge_c.dll";
+        const string dll_path = "D:/git/ImageCap/uface_quality_judge_c.dll";
 
         [DllImport(dll_path, EntryPoint = "new_QualityJudge", CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr new_QualityJudge(int min_face_size);

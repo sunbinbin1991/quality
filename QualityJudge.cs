@@ -24,7 +24,7 @@ namespace Uface
         }
 
   
-        public int isQualified(ref UImage uimage)
+        public int isQualified(UImage uimage)
         {
             int res = -100;
             int s = Marshal.ReadByte(uimage.pixels);
@@ -33,11 +33,11 @@ namespace Uface
             try
             {
                 res = PInvoke.QualityJudge_isQualified(cptr, uimage);//
-            }
-            catch (Exception e) {
+            }            
+            catch (AccessViolationException e) {
                 System.Console.WriteLine(e.Message);
                 return 0;
-            }           
+            }
 
             return res;
         }

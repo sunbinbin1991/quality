@@ -32,7 +32,7 @@ namespace Player
         private int clickCount;
         private string baseFolder;
         private int baseFolderLevel;
-        UImage uimage_pic = new UImage();
+        private UImage uimage_pic = new UImage();
         private JudgeResult jr = new JudgeResult();
         private Dictionary<string, long> fileList = new Dictionary<string, long> { };
         System.IO.StreamWriter file_sucess;
@@ -270,7 +270,7 @@ namespace Player
                 createBuffer(tmpBitmap, ref uimage_1);
                 Bitmap saveImg = new Bitmap(tmpBitmap);
                 Bitmap2UImage(saveImg, ref uimage_1);              
-                int res = judge.isQualified(ref uimage_1);               
+                int res = judge.isQualified(uimage_1);               
                 Console.WriteLine(res);
                 if (res == 0)
                 {
@@ -341,23 +341,33 @@ namespace Player
             uimage.Height = bitmap.Height;
             uimage.pixels = Marshal.AllocHGlobal(bitmap.Width * bitmap.Height * 3);
         }
+        static void createBufferSize(Size size, ref UImage uimage)
+        {
+            uimage.Width = size.Width;
+            uimage.Height = size.Height;
+            uimage.pixels = Marshal.AllocHGlobal(size.Width * size.Height * 3);
+        }
+
         static void freeBuffer(UImage uimage)
         {
             Marshal.FreeHGlobal(uimage.pixels);            
+        }
+
+        static void freeBufferref(ref UImage uimage)
+        {
+            Marshal.FreeHGlobal(uimage.pixels);
         }
 
         private void pictureBox_Click(object sender, EventArgs e)
         {
 
         }
-        private int judgeImage(ref Bitmap bitmap)
+        private int judgeImage(Bitmap bitmap)
         {
-            DateTime now = DateTime.Now;           
             createBuffer(bitmap, ref uimage_pic);
             Bitmap2UImage(bitmap, ref uimage_pic);
-            UImage tempUimage = new UImage();
-            tempUimage = uimage_pic;
-            int res = judge.isQualified(ref tempUimage);           
+            int res = judge.isQualified(uimage_pic);
+            freeBufferref(ref uimage_pic);
             return res;
             
         }
@@ -380,7 +390,7 @@ namespace Player
                     this.pictureBox.Image = bit;
                     Graphics g = Graphics.FromImage(bit);                           
                     Bitmap tmpBitmap = new Bitmap(Image.FromFile(openFileDialog.FileName));
-                    int judgeflag = judgeImage(ref tmpBitmap);                   
+                    int judgeflag = judgeImage(tmpBitmap);                   
                     jr = getJudgeResult(tmpBitmap);
                     Pen greenPen = new Pen(Color.CornflowerBlue, 3);
                     Rectangle rect = new Rectangle(jr.xmin, jr.ymin, jr.xmax- jr.xmin, jr.ymax -jr.ymin);
@@ -469,6 +479,27 @@ namespace Player
             }
             return FileList;
         }
+
+
+        public static Bitmap ResizeImage(Bitmap imgToResize, Size size)
+        {
+            try
+            {
+                Bitmap b = new Bitmap(size.Width, size.Height);
+                using (Graphics g = Graphics.FromImage((Image)b))
+                {
+                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                    g.DrawImage(imgToResize, 0, 0, size.Width, size.Height);
+                }
+                return b;
+            }
+            catch
+            {
+                Console.WriteLine("Bitmap could not be resized");
+                return imgToResize;
+            }
+        }
+
         private void 打开图片文件夹ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             CloseCurrentVideoSource();
@@ -493,15 +524,32 @@ namespace Player
                 List<string> test = new List<string>(fileList.Keys);
                 pictureBox.Image = ImageDecoder.DecodeFromFile(test[0], out imageInfo);
                 processForm progress = new processForm();
-            
+                progress.Show();
+                Size size = new Size();
+                size.Height = 640;
+                size.Width = 480;
+              
                 for (int i = 0; i < test.Count; i++)
                 {
-                    progress.Show();
-                    Console.WriteLine("test.Count=" + i);                 
+                    //
+                    Console.WriteLine("test.Count=" + i);
+                    Console.WriteLine("test[i] =" + test[i]);
                     //Image img = Image.FromFile(test[i]);
-                    //Image bmp = new Bitmap(img.Width, img.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);                  
-                    Bitmap tmpBitmap = new Bitmap(Image.FromFile(test[i]));
-                    int judgeflag = judgeImage(ref tmpBitmap);
+                    FileStream fs = new FileStream(test[i], FileMode.Open, FileAccess.Read);
+                    //Image bmp = new Bitmap(img.Width, img.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);   
+                    try
+                    {
+                        Image img = Image.FromStream(fs);                        
+                        tmpBitmap = new Bitmap(img);
+                        //tmpBitmap = ResizeImage(tmpBitmap, size);
+                       
+                    }
+                    catch (ArgumentException ) {
+                        Console.WriteLine("**************** give me a reason");
+                        continue;
+                    }                  
+                    int judgeflag = judgeImage(tmpBitmap);
+                  
                     if (isSave || isRecursive)
                     {
                         movefile(test[i], judgeflag);
@@ -513,8 +561,8 @@ namespace Player
                     }
                     else {
                         file_failed.WriteLine(test[i] + "\t" + result);
-                    }               
-
+                    }
+                    tmpBitmap.Dispose();
                     int num = test.Count;
                     int processPercent = progress.Addprogess(num);
                     progress.Text = "任务当前进度 "+Convert.ToString(processPercent) +"%";
@@ -523,7 +571,7 @@ namespace Player
                 file_sucess.Close();
                 file_failed.Close();
                 fileList.Clear();
-                freeBuffer(uimage_pic);
+                //freeBuffer(uimage_pic);
             }
         }
         private JudgeResult getJudgeResult(Bitmap bitmap)

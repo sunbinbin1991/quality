@@ -17,3 +17,8 @@ E:\bin\code\C#_project\ImageCap\Player\bin\x86\Debug\Uface.pdb
 E:\bin\code\C#_project\ImageCap\Player\obj\x86\Debug\Uface.dll
 E:\bin\code\C#_project\ImageCap\Player\obj\x86\Debug\Uface.pdb
 E:\bin\code\C#_project\ImageCap\Player\obj\x86\Debug\Uface.csprojResolveAssemblyReference.cache
+D:\git\ImageCap\Player\bin\x86\Debug\Uface.dll
+D:\git\ImageCap\Player\bin\x86\Debug\Uface.pdb
+D:\git\ImageCap\Player\obj\x86\Debug\Uface.dll
+D:\git\ImageCap\Player\obj\x86\Debug\Uface.pdb
+D:\git\ImageCap\Player\obj\x86\Debug\Uface.csprojResolveAssemblyReference.cache
